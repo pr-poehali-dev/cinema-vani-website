@@ -69,7 +69,7 @@ const FILMS = [
     year: 2023,
     genre: "Анимация, комедия",
     country: "Россия",
-    duration: "90 мин",
+    duration: "51 мин",
     age: "6+",
     ageColor: "#FF2D55",
     poster: "https://cdn.poehali.dev/projects/e8548a1c-8166-4d6d-9a2e-9b149b1317f8/bucket/91793efe-f936-4877-b281-b73ceefdffdb.jpeg",
