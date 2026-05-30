@@ -20,6 +20,54 @@ function isHoliday(date: Date): boolean {
 
 const SESSIONS_TIMES = ["11:00", "12:00", "14:00", "16:00", "19:00", "20:00"];
 
+// Вернуть актуальную метку сеанса по текущей дате
+function getSessionLabel(sessions: { date: Date; time: string }[]): string {
+  const now = new Date();
+  // Сброс до начала дня для сравнения
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const [nowH, nowM] = [now.getHours(), now.getMinutes()];
+
+  for (const s of sessions) {
+    const sDay = new Date(s.date.getFullYear(), s.date.getMonth(), s.date.getDate());
+    const [sH, sM] = s.time.split(":").map(Number);
+    const diff = sDay.getTime() - today.getTime();
+    const daysDiff = Math.round(diff / 86400000);
+
+    // Сеанс ещё не прошёл сегодня или в будущем
+    const passedToday = daysDiff === 0 && (nowH > sH || (nowH === sH && nowM >= sM));
+    if (daysDiff < 0 || passedToday) continue;
+
+    const d = s.date.getDate();
+    const mon = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"][s.date.getMonth()];
+
+    if (daysDiff === 0) return `Сегодня, ${d} ${mon} в ${s.time}`;
+    if (daysDiff === 1) return `Завтра, ${d} ${mon} в ${s.time}`;
+    return `${d} ${mon} в ${s.time}`;
+  }
+  // Все сеансы прошли
+  return "Следите за анонсами";
+}
+
+// Расписание сеансов каждого фильма
+const FILM_SESSIONS: { [id: number]: { date: Date; time: string }[] } = {
+  1: [ // Фиксики
+    { date: new Date(2026, 4, 31), time: "12:00" }, // 31 мая
+    { date: new Date(2026, 5, 2),  time: "12:00" }, // 2 июня
+  ],
+  2: [ // Смешарики. Начало
+    { date: new Date(2026, 4, 30), time: "18:00" }, // 30 мая
+    { date: new Date(2026, 5, 1),  time: "18:00" }, // 1 июня
+  ],
+  3: [ // Тачки
+    { date: new Date(2026, 5, 10), time: "11:00" }, // 10 июня
+    { date: new Date(2026, 5, 13), time: "11:00" }, // 13 июня (12-е — праздник)
+  ],
+  4: [ // Смешарики снимают кино
+    { date: new Date(2026, 5, 15), time: "12:00" }, // 15 июня
+    { date: new Date(2026, 5, 17), time: "12:00" }, // 17 июня
+  ],
+};
+
 const FILMS = [
   {
     id: 1,
@@ -426,7 +474,7 @@ function FilmCard({ film, onBuy }: { film: typeof FILMS[0]; onBuy: (f: typeof FI
           style={{ background: `${film.accent}12`, border: `1px solid ${film.accent}30` }}>
           <Icon name="Clock" size={14} style={{ color: film.accent }} />
           <span className="font-nunito font-bold text-sm" style={{ color: film.accent }}>
-            {film.sessions[0].label}
+            {getSessionLabel(FILM_SESSIONS[film.id])}
           </span>
         </div>
         <button
@@ -465,14 +513,53 @@ function FilmsSection({ onBuy }: { onBuy: (f: typeof FILMS[0]) => void }) {
   );
 }
 
-const SCHEDULE = [
-  { film: FILMS[1], when: "Сегодня — 30 мая 2026", time: "18:00", sub: "сегодня", color: "#00B4FF" },
-  { film: FILMS[0], when: "Завтра — 31 мая 2026", time: "12:00", sub: "завтра", color: "#FF2D55" },
-  { film: FILMS[2], when: "10 июня 2026", time: "11:00", sub: "10 июня", color: "#FFD600" },
-  { film: FILMS[3], when: "15 июня 2026", time: "12:00", sub: "15 июня", color: "#9C27B0" },
-];
+const FILM_COLORS = ["#FF2D55", "#00B4FF", "#FFD600", "#9C27B0"];
+
+function getUpcomingSessions() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const [nowH, nowM] = [now.getHours(), now.getMinutes()];
+  const MONTHS_SHORT = ["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"];
+  const MONTHS_FULL = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+
+  const result: { film: typeof FILMS[0]; date: Date; time: string; color: string }[] = [];
+
+  FILMS.forEach((film, idx) => {
+    const sessions = FILM_SESSIONS[film.id];
+    for (const s of sessions) {
+      const sDay = new Date(s.date.getFullYear(), s.date.getMonth(), s.date.getDate());
+      const [sH, sM] = s.time.split(":").map(Number);
+      const diff = Math.round((sDay.getTime() - today.getTime()) / 86400000);
+      const passedToday = diff === 0 && (nowH > sH || (nowH === sH && nowM >= sM));
+      if (diff < 0 || passedToday) continue;
+      result.push({ film, date: s.date, time: s.time, color: FILM_COLORS[idx] });
+      break; // только ближайший сеанс фильма
+    }
+  });
+
+  // Сортируем по дате
+  result.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  return result.map((r) => {
+    const sDay = new Date(r.date.getFullYear(), r.date.getMonth(), r.date.getDate());
+    const diff = Math.round((sDay.getTime() - today.getTime()) / 86400000);
+    const d = r.date.getDate();
+    const mon = MONTHS_FULL[r.date.getMonth()];
+    const monS = MONTHS_SHORT[r.date.getMonth()];
+    let sub = `${d} ${monS}`;
+    let when = `${d} ${mon} ${r.date.getFullYear()}`;
+    if (diff === 0) { sub = "сегодня"; when = `Сегодня — ${d} ${mon} ${r.date.getFullYear()}`; }
+    if (diff === 1) { sub = "завтра"; when = `Завтра — ${d} ${mon} ${r.date.getFullYear()}`; }
+    return { ...r, sub, when };
+  });
+}
 
 function ScheduleSection({ onBuy }: { onBuy: (f: typeof FILMS[0]) => void }) {
+  const [schedule, setSchedule] = useState(getUpcomingSessions);
+  useEffect(() => {
+    const t = setInterval(() => setSchedule(getUpcomingSessions()), 60000);
+    return () => clearInterval(t);
+  }, []);
   return (
     <section className="px-4 py-16" style={{ background: "var(--cinema-dark2)" }}>
       <div className="max-w-4xl mx-auto">
@@ -482,7 +569,12 @@ function ScheduleSection({ onBuy }: { onBuy: (f: typeof FILMS[0]) => void }) {
         </div>
 
         <div className="flex flex-col gap-5">
-          {SCHEDULE.map((s, i) => (
+          {schedule.length === 0 && (
+            <div className="text-center py-10 font-nunito text-lg" style={{ color: "rgba(255,255,255,0.4)" }}>
+              Скоро появятся новые сеансы — следите за анонсами!
+            </div>
+          )}
+          {schedule.map((s, i) => (
             <div key={i} className="rounded-3xl overflow-hidden flex flex-col sm:flex-row"
               style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${s.color}35` }}>
               <div className="flex items-center justify-center p-6 sm:w-44 shrink-0" style={{ background: `${s.color}18` }}>
