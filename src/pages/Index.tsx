@@ -53,18 +53,22 @@ const FILM_SESSIONS: { [id: number]: { date: Date; time: string }[] } = {
   1: [ // Фиксики
     { date: new Date(2026, 4, 31), time: "12:00" }, // 31 мая
     { date: new Date(2026, 5, 2),  time: "12:00" }, // 2 июня
+    { date: new Date(2026, 5, 4),  time: "12:00" }, // 4 июня
   ],
   2: [ // Смешарики. Начало
     { date: new Date(2026, 4, 30), time: "18:00" }, // 30 мая
     { date: new Date(2026, 5, 1),  time: "18:00" }, // 1 июня
+    { date: new Date(2026, 5, 3),  time: "18:00" }, // 3 июня
   ],
   3: [ // Тачки
     { date: new Date(2026, 5, 10), time: "11:00" }, // 10 июня
     { date: new Date(2026, 5, 13), time: "11:00" }, // 13 июня (12-е — праздник)
+    { date: new Date(2026, 5, 16), time: "11:00" }, // 16 июня
   ],
   4: [ // Смешарики снимают кино
     { date: new Date(2026, 5, 15), time: "12:00" }, // 15 июня
     { date: new Date(2026, 5, 17), time: "12:00" }, // 17 июня
+    { date: new Date(2026, 5, 19), time: "12:00" }, // 19 июня
   ],
 };
 
