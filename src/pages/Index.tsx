@@ -17,7 +17,7 @@ const FILMS = [
     poster: "https://cdn.poehali.dev/projects/e8548a1c-8166-4d6d-9a2e-9b149b1317f8/bucket/2870f96f-4526-4971-9688-375b6ad86558.jpg",
     description: "Весёлые маленькие человечки Фиксики снова в деле! На этот раз им противостоят коварные Кработы — роботы-крабы, мечтающие захватить мир технологий. Приключения, смех и важные открытия ждут вас!",
     accent: "#FF2D55",
-    sessions: [{ label: "Завтра, 31 мая в 18:00" }],
+    sessions: [{ label: "Завтра, 31 мая в 12:00" }],
   },
   {
     id: 2,
@@ -227,7 +227,7 @@ function Hero({ setActive }: { setActive: (s: string) => void }) {
         style={{ background: "rgba(255,214,0,0.08)", borderTop: "1px solid rgba(255,214,0,0.15)" }}
       >
         <div className="ticker-content font-nunito font-bold text-sm" style={{ color: "#FFD600" }}>
-          🎬 Фиксики против Кработов — завтра 31 мая в 18:00 &nbsp;|&nbsp; 🎭 Смешарики. Начало — сегодня 30 мая в 18:00 &nbsp;|&nbsp; 🚗 Тачки — 10 июня в 11:00 &nbsp;|&nbsp; ⭐ Работаем каждый день 10:00–23:00 &nbsp;|&nbsp; 📍 Тамбов, Мичуринская ул., д. 203 &nbsp;&nbsp;&nbsp;
+          🎬 Фиксики против Кработов — завтра 31 мая в 12:00 &nbsp;|&nbsp; 🎭 Смешарики. Начало — сегодня 30 мая в 18:00 &nbsp;|&nbsp; 🚗 Тачки — 10 июня в 11:00 &nbsp;|&nbsp; ⭐ Работаем каждый день 10:00–23:00 &nbsp;|&nbsp; 📍 Тамбов, Мичуринская ул., д. 203 &nbsp;&nbsp;&nbsp;
         </div>
       </div>
     </section>
@@ -331,7 +331,7 @@ const SCHEDULE = [
   {
     film: FILMS[0],
     when: "Завтра — 31 мая 2026",
-    time: "18:00",
+    time: "12:00",
     sub: "завтра",
     color: "#FF2D55",
   },
