@@ -72,7 +72,7 @@ const FILMS = [
     duration: "90 мин",
     age: "6+",
     ageColor: "#FF2D55",
-    poster: "https://cdn.poehali.dev/projects/e8548a1c-8166-4d6d-9a2e-9b149b1317f8/bucket/d2fc4766-6b40-4e66-829b-a1ddc39fd939.jpeg",
+    poster: "https://cdn.poehali.dev/projects/e8548a1c-8166-4d6d-9a2e-9b149b1317f8/bucket/91793efe-f936-4877-b281-b73ceefdffdb.jpeg",
     description: "Смешарики снимают кино! И не просто кино, а целый сборник из нескольких короткометражных фильмов. В программе боевик и комедия, фантастика и фэнтези, мюзикл и немое кино. А также эльфы, феи, древние пророчества, мировое зло, Пин Бонд и роботы-дроиды.",
     accent: "#9C27B0",
     sessions: [{ label: "15 июня в 12:00" }],
