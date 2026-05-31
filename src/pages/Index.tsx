@@ -349,6 +349,31 @@ function LiveClock() {
       <div className="font-nunito text-white/40 text-xs">
         {holiday ? "В праздничные дни не работаем" : "Работаем: Пн–Вс, 10:00–23:00"}
       </div>
+
+      {/* Активные сеансы прямо сейчас */}
+      {(() => {
+        const active: { film: typeof FILMS[0]; label: string; status: "now" | "next" }[] = [];
+        FILMS.forEach((film) => {
+          const { label, status } = getSessionInfo(FILM_SESSIONS[film.id], parseDuration(film.duration));
+          if (status === "now" || status === "next") {
+            active.push({ film, label, status });
+          }
+        });
+        const nowFilms = active.filter(a => a.status === "now");
+        if (nowFilms.length === 0) return null;
+        return (
+          <div className="w-full flex flex-col gap-2 mt-1">
+            {nowFilms.map(({ film, label }) => (
+              <div key={film.id} className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                style={{ background: "rgba(255,45,85,0.15)", border: "1px solid rgba(255,45,85,0.4)" }}>
+                <span className="w-2 h-2 rounded-full shrink-0 animate-pulse" style={{ background: "#FF2D55" }} />
+                <span className="font-nunito font-bold text-sm text-white">{film.title}</span>
+                <span className="font-nunito text-xs ml-auto" style={{ color: "#FF2D55" }}>{label.replace("🔴 ", "")}</span>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
     </div>
   );
 }
