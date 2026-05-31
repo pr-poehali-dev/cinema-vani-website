@@ -20,32 +20,64 @@ function isHoliday(date: Date): boolean {
 
 const SESSIONS_TIMES = ["11:00", "12:00", "14:00", "16:00", "19:00", "20:00"];
 
-// Вернуть актуальную метку сеанса по текущей дате
-function getSessionLabel(sessions: { date: Date; time: string }[]): string {
+const MONTHS_GEN = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+
+function parseDuration(dur: string): number {
+  // "1 ч 22 мин" → минуты; "52 мин" → минуты
+  const hMatch = dur.match(/(\d+)\s*ч/);
+  const mMatch = dur.match(/(\d+)\s*мин/);
+  return (hMatch ? parseInt(hMatch[1]) * 60 : 0) + (mMatch ? parseInt(mMatch[1]) : 0);
+}
+
+function formatSessionDate(date: Date): string {
+  const today = new Date();
+  const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const sDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diff = Math.round((sDay.getTime() - todayDay.getTime()) / 86400000);
+  const d = date.getDate();
+  const mon = MONTHS_GEN[date.getMonth()];
+  if (diff === 0) return `сегодня, ${d} ${mon}`;
+  if (diff === 1) return `завтра, ${d} ${mon}`;
+  const DAYS_SHORT = ["вс","пн","вт","ср","чт","пт","сб"];
+  return `${DAYS_SHORT[date.getDay()]} ${d} ${mon}`;
+}
+
+// Возвращает { label, status: 'upcoming' | 'now' | 'next' }
+function getSessionInfo(sessions: { date: Date; time: string }[], durationMin: number): { label: string; status: "upcoming" | "now" | "next" } {
   const now = new Date();
-  // Сброс до начала дня для сравнения
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const [nowH, nowM] = [now.getHours(), now.getMinutes()];
+  const nowMs = now.getTime();
 
-  for (const s of sessions) {
-    const sDay = new Date(s.date.getFullYear(), s.date.getMonth(), s.date.getDate());
+  for (let i = 0; i < sessions.length; i++) {
+    const s = sessions[i];
     const [sH, sM] = s.time.split(":").map(Number);
-    const diff = sDay.getTime() - today.getTime();
-    const daysDiff = Math.round(diff / 86400000);
+    const startMs = new Date(s.date.getFullYear(), s.date.getMonth(), s.date.getDate(), sH, sM).getTime();
+    const endMs = startMs + durationMin * 60000;
 
-    // Сеанс ещё не прошёл сегодня или в будущем
-    const passedToday = daysDiff === 0 && (nowH > sH || (nowH === sH && nowM >= sM));
-    if (daysDiff < 0 || passedToday) continue;
+    if (nowMs >= startMs && nowMs < endMs) {
+      // Сеанс идёт прямо сейчас
+      const left = Math.ceil((endMs - nowMs) / 60000);
+      return { label: `🔴 Сеанс идёт — ещё ${left} мин`, status: "now" };
+    }
 
-    const d = s.date.getDate();
-    const mon = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"][s.date.getMonth()];
+    if (nowMs < startMs) {
+      // Ближайший предстоящий сеанс
+      const dateStr = formatSessionDate(s.date);
+      const diffMin = Math.round((startMs - nowMs) / 60000);
+      if (diffMin <= 60) {
+        return { label: `Начало через ${diffMin} мин (${s.time})`, status: "upcoming" };
+      }
+      return { label: `${dateStr.charAt(0).toUpperCase() + dateStr.slice(1)} в ${s.time}`, status: "upcoming" };
+    }
 
-    if (daysDiff === 0) return `Сегодня, ${d} ${mon} в ${s.time}`;
-    if (daysDiff === 1) return `Завтра, ${d} ${mon} в ${s.time}`;
-    return `${d} ${mon} в ${s.time}`;
+    // Сеанс закончился — смотрим следующий
+    if (i + 1 < sessions.length) {
+      const next = sessions[i + 1];
+      const nextDateStr = formatSessionDate(next.date);
+      return { label: `Следующий: ${nextDateStr} в ${next.time}`, status: "next" };
+    }
   }
-  // Все сеансы прошли
-  return "Следите за анонсами";
+
+  return { label: "Следите за анонсами", status: "next" };
 }
 
 // Расписание сеансов каждого фильма
@@ -440,6 +472,11 @@ function Hero({ setActive }: { setActive: (s: string) => void }) {
 }
 
 function FilmCard({ film, onBuy }: { film: typeof FILMS[0]; onBuy: (f: typeof FILMS[0]) => void }) {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setTick(n => n + 1), 30000);
+    return () => clearInterval(t);
+  }, []);
   return (
     <div
       className="card-glow rounded-3xl overflow-hidden flex flex-col"
@@ -474,13 +511,19 @@ function FilmCard({ film, onBuy }: { film: typeof FILMS[0]; onBuy: (f: typeof FI
         <p className="font-nunito text-sm leading-relaxed flex-1" style={{ color: "rgba(255,255,255,0.6)" }}>
           {film.description}
         </p>
-        <div className="rounded-2xl p-3 flex items-center gap-2"
-          style={{ background: `${film.accent}12`, border: `1px solid ${film.accent}30` }}>
-          <Icon name="Clock" size={14} style={{ color: film.accent }} />
-          <span className="font-nunito font-bold text-sm" style={{ color: film.accent }}>
-            {getSessionLabel(FILM_SESSIONS[film.id])}
-          </span>
-        </div>
+        {(() => {
+          const { label, status } = getSessionInfo(FILM_SESSIONS[film.id], parseDuration(film.duration));
+          const color = status === "now" ? "#FF2D55" : status === "next" ? "rgba(255,255,255,0.4)" : film.accent;
+          const bg = status === "now" ? "rgba(255,45,85,0.12)" : status === "next" ? "rgba(255,255,255,0.05)" : `${film.accent}12`;
+          const border = status === "now" ? "rgba(255,45,85,0.35)" : status === "next" ? "rgba(255,255,255,0.12)" : `${film.accent}30`;
+          return (
+            <div className="rounded-2xl p-3 flex items-center gap-2"
+              style={{ background: bg, border: `1px solid ${border}` }}>
+              <Icon name="Clock" size={14} style={{ color }} />
+              <span className="font-nunito font-bold text-sm" style={{ color }}>{label}</span>
+            </div>
+          );
+        })()}
         <button
           onClick={() => onBuy(film)}
           className="w-full py-3 rounded-2xl font-nunito font-bold text-base transition-all hover:scale-105 active:scale-95"
