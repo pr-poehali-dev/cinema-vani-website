@@ -83,9 +83,9 @@ function getSessionInfo(sessions: { date: Date; time: string }[], durationMin: n
 // Расписание сеансов каждого фильма
 const FILM_SESSIONS: { [id: number]: { date: Date; time: string }[] } = {
   1: [ // Фиксики
-    { date: new Date(2026, 4, 31), time: "12:00" }, // 31 мая
-    { date: new Date(2026, 5, 2),  time: "12:00" }, // 2 июня
-    { date: new Date(2026, 5, 4),  time: "12:00" }, // 4 июня
+    { date: new Date(2026, 4, 31), time: "14:00" }, // 31 мая
+    { date: new Date(2026, 5, 2),  time: "14:00" }, // 2 июня
+    { date: new Date(2026, 5, 4),  time: "14:00" }, // 4 июня
   ],
   2: [ // Смешарики. Начало
     { date: new Date(2026, 4, 30), time: "18:00" }, // 30 мая
